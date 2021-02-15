@@ -127,3 +127,12 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Pre-trained models
+*.ckpt
+
+# data
+data/
+
+# checkpoints
+checkpoints/
