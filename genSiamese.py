@@ -153,11 +153,37 @@ class SiamDataset(Dataset):
             for wsi in self.wsi_list:
                 h,w = wsi.size
                 acc += 1.*h*w/(224*224)
-            return int(acc)
+            return int(0.1*acc) # approx same size
         
         return len(self.img_file_list)
 
-## ----- Create Siam dataset here --------
+def create_dataset():
+    # img_file_list = glob.glob('/home/karman/DDP/TCGA_expt/TCGA_dataset/*/*.png') 
+    # address in himalaya ("/home/Drive3/Karman/TCGA_dataset/TCGA-A1-A0SD-01Z-00-DX1.DB17BFA9-D951-42A8-91D2-F4C2EBC6EB9F/*.png")
+    img_file_list = sorted(glob.glob('/home/Drive3/Karman/TCGA_dataset/*/*.png')) 
+    # 80% of list
+    len_img = len(img_file_list)
+    img_file_list = img_file_list[:int(0.8*len_img)] # rest become test set
+    dataset = SiamDataset(img_file_list, mode='create')
+
+    # out_file_path = '/home/karman/DDP/BrC_GraphMIL/data/tcga_'
+    # address in himalaya "data/tcga_"
+    out_file_path = 'data/tcga_'
+    if not os.path.exists(out_file_path):
+        os.makedirs(out_file_path)
+
+    torch.manual_seed(77077)
+    random.seed(71017)
+
+    idx=0
+    for data in dataset:
+        pickle_out = open(out_file_path+str(idx),"wb")
+        pickle.dump(data, pickle_out)
+        pickle_out.close()
+        idx += 1
+        if idx>=len(dataset):
+            break
+
 
 class ContrastiveLoss(nn.Module):
     # label == 1 means same sample, label == 0 means different samples
@@ -208,7 +234,7 @@ def train(args, model, device, loss_fn, train_loader, optimizer, num_epochs):
 
 args = {}
 args['batch_size'] = 150
-args['epochs'] = 5
+args['epochs'] = 3
 args['seed']=990077
 args['lr']=0.01
 args['train_ratio']=0.8
@@ -235,4 +261,4 @@ torch.save({
     'epoch': args['epochs'],
     'model_state_dict': siamNetwork.state_dict(),
     'optimizer_state_dict': optimizer.state_dict(),
-    }, 'checkpoints/siamese_5epoch_allwsi_lossSum.pth.tar')
+    }, 'checkpoints/siamese_3epoch_allwsi_lossSum.pth.tar')
