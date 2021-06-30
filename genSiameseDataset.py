@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import random
-import os, sys, glob, pickle
+import os, sys, glob, pickle, pdb
 from xml.dom import minidom
 import matplotlib.path as mplPath
 import numpy as np
@@ -18,6 +18,7 @@ import torch_geometric.transforms as T
 import torch_geometric.nn as geo_nn
 # from torch.utils.data import Dataset
 from torch_geometric.data import Data, Dataset, DataLoader
+from random import randrange
 
 from PIL import Image
 Image.MAX_IMAGE_PIXELS = None
@@ -57,30 +58,46 @@ class SiamDataset(Dataset):
 
             self.wsi_list = []
             self.wsi_weight = []
+            acc = 0
             for img_file in img_file_list:
                 wsi = Image.open(img_file).convert('RGB')
                 self.wsi_list.append(wsi)
                 h,w = wsi.size
                 self.wsi_weight.append(h*w)
+                # wsi.close()
+                acc += 1.*h*w/(224*224)
+            self.len_set = int(0.4*acc) # approx same size
             
             
             
         
     def sample(self):
-        wsi = random.choices(self.wsi_list, weights=self.wsi_weight)[0]
+        # img_file = random.choices(self.wsi_list, weights=self.wsi_weight)[0]
+        # wsi = Image.open(img_file)#.convert('RGB')
+        # x, y = wsi.size
+        # matrix=224
+        # x1 = randrange(0, x - matrix)
+        # y1 = randrange(0, y - matrix)
 
+        # wsi = (wsi.crop((x1, y1, x1 + matrix, y1 + matrix))).convert('RGB')
+
+
+        wsi = random.choices(self.wsi_list, weights=self.wsi_weight)[0]
+        
         img = self.single_transform(wsi)
+        # wsi.close()
         
         return img
     
     
-    def sample_detailed(self):
-        wsi = random.choices(self.wsi_list, weights=self.wsi_weight)[0]
-        wsi_idx = self.wsi_list.index(wsi)
+    # def sample_detailed(self):
+    #     img_file = random.choices(self.wsi_list, weights=self.wsi_weight)[0]
+    #     wsi = Image.open(img_file).convert('RGB')
+    #     wsi_idx = self.wsi_list.index(wsi)
         
-        i,j,h,w = self.randomCrop.get_params(wsi, self.randomCrop.size)
+    #     i,j,h,w = self.randomCrop.get_params(wsi, self.randomCrop.size)
         
-        return wsi_idx, i,j, self.toTensor(F.crop(wsi, i,j,h,w))
+    #     return wsi_idx, i,j, self.toTensor(F.crop(wsi, i,j,h,w))
                
         
     def __getitem__(self, index):
@@ -101,11 +118,7 @@ class SiamDataset(Dataset):
         
     def __len__(self):
         if self.mode=='create':
-            acc = 0
-            for wsi in self.wsi_list:
-                h,w = wsi.size
-                acc += 1.*h*w/(224*224)
-            return int(0.1*acc) # approx same size
+            return self.len_set
         
         return len(self.img_file_list)
 
@@ -115,12 +128,13 @@ def create_dataset():
     img_file_list = sorted(glob.glob('/home/Drive3/Karman/TCGA_dataset/*/*.png')) 
     # 80% of list
     len_img = len(img_file_list)
-    img_file_list = img_file_list[:int(0.8*len_img)] # rest become test set
+    img_file_list = img_file_list[:int(0.1*len_img)] # smaller sample for siam becuase size
     dataset = SiamDataset(img_file_list, mode='create')
+    print(len(dataset))
 
     # out_file_path = '/home/karman/DDP/BrC_GraphMIL/data/tcga_'
     # address in himalaya "data/tcga_"
-    out_file_path = 'data/tcga_'
+    out_file_path = 'data/'
     if not os.path.exists(out_file_path):
         os.makedirs(out_file_path)
 
@@ -129,11 +143,14 @@ def create_dataset():
 
     idx=0
     for data in dataset:
-        pickle_out = open(out_file_path+str(idx),"wb")
+        pickle_out = open(out_file_path+'tcga_'+str(idx),"wb")
         pickle.dump(data, pickle_out)
         pickle_out.close()
         idx += 1
+        if (idx%100==0):
+            print("done with ", idx)
         if idx>=len(dataset):
             break
+
 
 create_dataset()

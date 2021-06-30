@@ -25,11 +25,11 @@ Image.MAX_IMAGE_PIXELS = None
 
 
 use_cuda = torch.cuda.is_available()
-device = torch.device("cuda" if use_cuda else "cpu")
+device = torch.device("cuda:0" if use_cuda else "cpu")
 print(device)
 
-MODEL_PATH = '_ckpt_epoch_9.ckpt'
-# MODEL_PATH = 'tenpercent_resnet18.ckpt'
+# MODEL_PATH = '_ckpt_epoch_9.ckpt'
+MODEL_PATH = 'tenpercent_resnet18.ckpt'
 RETURN_PREACTIVATION = True  # return features from the model, if false return classification logits
 NUM_CLASSES = 4  # only used if RETURN_PREACTIVATION = False
 
@@ -87,29 +87,29 @@ class SiamDataset(Dataset):
             ])
         
         self.mode = mode
-        if mode=='create':
-            self.single_transform = torchvision.transforms.Compose([
-                torchvision.transforms.RandomCrop(224),
-                torchvision.transforms.ToTensor()
-            ])
-            self.augment = torchvision.transforms.Compose([
-                torchvision.transforms.ToPILImage(),
-                torchvision.transforms.RandomHorizontalFlip(),
-                torchvision.transforms.RandomAffine(affine_param),
-                torchvision.transforms.ColorJitter(
-                    brightness=jitter_param,
-                    contrast=jitter_param,
-                    saturation=jitter_param),
-                torchvision.transforms.ToTensor()
-            ])
+        # if mode=='create':
+        #     self.single_transform = torchvision.transforms.Compose([
+        #         torchvision.transforms.RandomCrop(224),
+        #         torchvision.transforms.ToTensor()
+        #     ])
+        #     self.augment = torchvision.transforms.Compose([
+        #         torchvision.transforms.ToPILImage(),
+        #         torchvision.transforms.RandomHorizontalFlip(),
+        #         torchvision.transforms.RandomAffine(affine_param),
+        #         torchvision.transforms.ColorJitter(
+        #             brightness=jitter_param,
+        #             contrast=jitter_param,
+        #             saturation=jitter_param),
+        #         torchvision.transforms.ToTensor()
+        #     ])
 
-            self.wsi_list = []
-            self.wsi_weight = []
-            for img_file in img_file_list:
-                wsi = Image.open(img_file).convert('RGB')
-                self.wsi_list.append(wsi)
-                h,w = wsi.size
-                self.wsi_weight.append(h*w)
+        #     self.wsi_list = []
+        #     self.wsi_weight = []
+        #     for img_file in img_file_list:
+        #         wsi = Image.open(img_file).convert('RGB')
+        #         self.wsi_list.append(wsi)
+        #         h,w = wsi.size
+        #         self.wsi_weight.append(h*w)
             
             
             
@@ -122,13 +122,13 @@ class SiamDataset(Dataset):
         return img
     
     
-    def sample_detailed(self):
-        wsi = random.choices(self.wsi_list, weights=self.wsi_weight)[0]
-        wsi_idx = self.wsi_list.index(wsi)
+    # def sample_detailed(self):
+    #     wsi = random.choices(self.wsi_list, weights=self.wsi_weight)[0]
+    #     wsi_idx = self.wsi_list.index(wsi)
         
-        i,j,h,w = self.randomCrop.get_params(wsi, self.randomCrop.size)
+    #     i,j,h,w = self.randomCrop.get_params(wsi, self.randomCrop.size)
         
-        return wsi_idx, i,j, self.toTensor(F.crop(wsi, i,j,h,w))
+    #     return wsi_idx, i,j, self.toTensor(F.crop(wsi, i,j,h,w))
                
         
     def __getitem__(self, index):
@@ -157,7 +157,6 @@ class SiamDataset(Dataset):
         
         return len(self.img_file_list)
 
-## ----- Create Siam dataset here --------
 
 class ContrastiveLoss(nn.Module):
     # label == 1 means same sample, label == 0 means different samples
@@ -212,7 +211,7 @@ args['epochs'] = 5
 args['seed']=990077
 args['lr']=0.01
 args['train_ratio']=0.8
-args['log_interval']=8
+args['log_interval']=30
 
 torch.manual_seed(args['seed'])
 
@@ -221,7 +220,7 @@ kwargs = {'num_workers': 4, 'pin_memory': True} if use_cuda else {}
 siamNetwork = SiameseNetwork(model)
 
 data_file_list = sorted(glob.glob("data/*"))
-dataset = SiamDataset(data_file_list)
+dataset = SiamDataset(data_file_list) # default mode is load
 
 train_loader = DataLoader(dataset=dataset, batch_size=args['batch_size'], shuffle = True, **kwargs)
 
@@ -235,4 +234,4 @@ torch.save({
     'epoch': args['epochs'],
     'model_state_dict': siamNetwork.state_dict(),
     'optimizer_state_dict': optimizer.state_dict(),
-    }, 'checkpoints/siamese_5epoch_allwsi_lossSum.pth.tar')
+    }, 'checkpoints/siamese_5epoch_10percentwsi_lossSum.pth.tar')
