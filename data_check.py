@@ -20,16 +20,12 @@ class GraphDataset(Dataset):
     def __getitem__(self, index):
         file_name = self.file_list[index]
         
-        # if self.augment:
-            # TODO
-            
-        # print('\n\n', file_name, '\n\n')
         data = pickle.load(open(file_name,'rb'))
 
-        vertex = torch.tensor(data[0], dtype=torch.float32)
+        vertex = data[0]#.clone(dtype=torch.float32)
 
-        edge = torch.tensor(data[1], dtype=torch.long)
-        edge, _ =  torch_geometric.utils.add_remaining_self_loops(edge)
+        edge = data[1]#.clone(dtype=torch.long)
+        # edge, _ =  torch_geometric.utils.add_remaining_self_loops(edge)
         
         
         l = torch.tensor(data[2])
@@ -57,14 +53,20 @@ num_edges = 0
 for data in dataset:
     total_count += 1
     num_edges += data['edge_index'].size()[1]
-    # if not torch_geometric.utils.is_undirected(data['edge_index']):
-    #   directed_count += 1
-    #   print('this is not undirected')
-    #   pdb.set_trace()
+    if not torch_geometric.utils.is_undirected(data['edge_index']):
+      directed_count += 1
+      print('this is not undirected')
+      pdb.set_trace()
     # pdb.set_trace()
     if total_count%200 == 0:
         print('count: ', total_count)
+    # if total_count >= 1000:
+    #     print("count got to 1000")
+    #     print('avg edges are: ', (0.5*num_edges)/total_count)
+    #     print('directed_count: ', directed_count)
+    #     exit()
 
 
 print('avg edges are: ', (0.5*num_edges)/total_count)
-pdb.set_trace()
+print('directed_count: ', directed_count)
+# pdb.set_trace()
