@@ -97,7 +97,6 @@ def generate_graph_label(label):
     raise Exception("Unknown Label")
 
 
-# TODO
 class SiamDataset(Dataset):
     def __init__(self, img_file, mode='load', affine_param=5, jitter_param=0.4, detailed=False):
         self.img_file = img_file
@@ -163,7 +162,6 @@ class SiamDataset(Dataset):
 
 
 
-
 siamNetwork = SiameseNetwork(model)
 
 checkpoint = torch.load('checkpoints/siamese_3epoch_10percentwsi_lossSum.pth.tar')
@@ -201,17 +199,18 @@ for slide in slides:
 
         num_graphs = 7 # from reference
 
-        for idx in range(num_graphs):
-            # save graphs
-            save_path_curr = save_path + image.rsplit('/',2)[1]+'/'+'idx'+str(idx)+'__'+file_name_curr.replace('.png','.pickle')
+        # this is to prevent repitition - we want to redo
+        # for idx in range(num_graphs):
+        #     # save graphs
+        #     save_path_curr = save_path + image.rsplit('/',2)[1]+'/'+'idx'+str(idx)+'__'+file_name_curr.replace('.png','.pickle')
 
-            if os.path.exists(save_path_curr):
-                count = count + 1
-                print("Already exists: ", count, file_name_curr)
-            else:
-                done_this = False
-        if done_this:
-            continue
+        #     if os.path.exists(save_path_curr):
+        #         count = count + 1
+        #         print("Already exists: ", count, file_name_curr)
+        #     else:
+        #         done_this = False
+        # if done_this:
+        #     continue
       
         dataset = SiamDataset(image, mode='create') # should be one image
 
