@@ -4,6 +4,13 @@ import pdb
 import pickle
 from itertools import chain
 
+import torch
+
+import torch_geometric
+import torch_geometric.transforms as T
+import torch_geometric.nn as geo_nn
+from torch_geometric.data import Data, Dataset, DataLoader
+
 class GraphDataset(Dataset):
     def __init__(self, pickle_files_dir, file_list):
         self.pickle_files_dir=pickle_files_dir
@@ -48,13 +55,15 @@ directed_count = 0
 num_edges = 0
 
 for data in dataset:
-	total_count += 1
-	num_edges += data['edge_index'].size()[1]
-	if not torch_geometric.utils.is_undirected(data['edge_index']):
-		directed_count += 1
-		print('this is not undirected')
-		pdb.set_trace()
-	pdb.set_trace()
+    total_count += 1
+    num_edges += data['edge_index'].size()[1]
+    # if not torch_geometric.utils.is_undirected(data['edge_index']):
+    #   directed_count += 1
+    #   print('this is not undirected')
+    #   pdb.set_trace()
+    # pdb.set_trace()
+    if total_count%200 == 0:
+        print('count: ', total_count)
 
 
 print('avg edges are: ', (0.5*num_edges)/total_count)
