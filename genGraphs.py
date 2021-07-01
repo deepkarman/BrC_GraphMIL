@@ -179,6 +179,7 @@ slides = sorted(glob.glob(path+'*'))
 label_sheet_name = '/home/Drive3/Karman/TCGA_master_allcases_2019.06.13 NK 12-09-19 Test-train cases marked_NC_added_mag_28-07-20.xlsx'
 xl_sheet = pd.read_excel(label_sheet_name, sheet_name='All', header = 1, nrows = 1006, usecols ='D,Y:Z')
 count = 0
+slide_idx = -1
 
 for slide in slides:
     images = sorted(glob.glob(slide+'/*.png'))
@@ -190,7 +191,7 @@ for slide in slides:
     slide_label = generate_graph_label(slide_label_df)
     if slide_label == -1:
         continue
-    
+    slide_idx += 1
 
     for image in images:
         data_curr = [[], [], []]      
@@ -252,10 +253,11 @@ for slide in slides:
             # save graphs
             save_path_curr = save_path + image.rsplit('/',2)[1]+'/'+'idx'+str(idx)+'__'+file_name_curr.replace('.png','.pickle')
 
-            data_curr = [[], [], []]
+            data_curr = [[], [], [], []]
             data_curr[0] = vertices[idx]
             data_curr[1] = edges[idx]
             data_curr[2] = slide_label
+            data_curr[3] = slide_idx
             data_curr = np.asarray(data_curr, dtype = object)
             if not os.path.exists(save_path_curr.rsplit('/',1)[0]):
                 os.makedirs(save_path_curr.rsplit('/',1)[0])
