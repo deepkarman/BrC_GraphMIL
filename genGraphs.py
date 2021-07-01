@@ -166,7 +166,7 @@ class SiamDataset(Dataset):
 
 siamNetwork = SiameseNetwork(model)
 
-checkpoint = torch.load('checkpoints/siamese_5epoch_10percentwsi_lossSum.pth.tar')
+checkpoint = torch.load('checkpoints/siamese_3epoch_10percentwsi_lossSum.pth.tar')
 siamNetwork.load_state_dict(checkpoint['model_state_dict'])
 
 
