@@ -195,8 +195,28 @@ for slide in slides:
     for image in images:
         data_curr = [[], [], []]      
         file_name_curr = image.rsplit('/',1)[1] 
+
+        done_this = True
+
+        num_graphs = 7 # from reference
+
+        for idx in range(num_graphs):
+            # save graphs
+            save_path_curr = save_path + image.rsplit('/',2)[1]+'/'+'idx'+str(idx)+'__'+file_name_curr.replace('.png','.pickle')
+
+            if os.path.exists(save_path_curr):
+                count = count + 1
+                print("Already exists: ", count, file_name_curr)
+            else:
+                done_this = False
+        if done_this:
+            continue
       
         dataset = SiamDataset(image, mode='create') # should be one image
+
+        # there is atleast one roi that is smaller than 100x100 pixels
+        if min(dataset.wsi.size) < 224:
+            continue
 
         num_samples = SAMPLES_PER_IMAGE
         
