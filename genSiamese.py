@@ -160,7 +160,7 @@ class SiamDataset(Dataset):
 
 class ContrastiveLoss(nn.Module):
     # label == 1 means same sample, label == 0 means different samples
-    def __init__(self, margin=0., do_average=True):
+    def __init__(self, margin=1., do_average=True):
         super(ContrastiveLoss, self).__init__()
         self.margin = margin
         self.eps = 1e-6
@@ -207,7 +207,7 @@ def train(args, model, device, loss_fn, train_loader, optimizer, num_epochs):
 
 args = {}
 args['batch_size'] = 150
-args['epochs'] = 5
+args['epochs'] = 3
 args['seed']=990077
 args['lr']=0.01
 args['train_ratio']=0.8
@@ -234,4 +234,4 @@ torch.save({
     'epoch': args['epochs'],
     'model_state_dict': siamNetwork.state_dict(),
     'optimizer_state_dict': optimizer.state_dict(),
-    }, 'checkpoints/siamese_5epoch_10percentwsi_lossSum.pth.tar')
+    }, 'checkpoints/siamese_3epoch_10percentwsi_lossSum.pth.tar')
